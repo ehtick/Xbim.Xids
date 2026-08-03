@@ -164,6 +164,29 @@ public class BuildingSmartCompatibilityTests
 		File.Delete(tmpFile);
 	}
 
+
+	[Fact]
+	public void IfcTypeRemainsUppercaseAfterExport()
+	{
+		var x = new Xids();
+		// A minimal specification with an IfcType facet
+		//
+		var t = x.PrepareSpecification(IfcSchemaVersion.IFC2X3);
+		t.Applicability.Facets.Add(new IfcTypeFacet() { IfcType = "IFCWALL" });
+
+
+		// export to a file. This should not change the case of an IfcType facet, which should remain upper case.
+		var tmpFile = Path.GetTempFileName();
+		x.ExportBuildingSmartIDS(tmpFile);
+
+		// Reload and check that the IfcType facet is still upper case
+		x = Xids.LoadBuildingSmartIDS(tmpFile);
+
+		x!.AllSpecifications().First().Applicability.Facets.OfType<IfcTypeFacet>().First().IfcType!.IsSingleExact<string>(out var typename).Should().BeTrue();
+		typename.Should().Be("IFCWALL", "IfcType should be upper case");
+
+	}
+
 	[Fact]
 	public void CanRoundtripSpecificationIdentifier()
 	{
